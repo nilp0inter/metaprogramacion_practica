@@ -8,6 +8,7 @@ from collections import defaultdict
 from lxml import html
 from pprint import pprint
 
+import yaml
 import requests
 
 TRELLO_API_DOC = 'https://trello.com/docs/api/index.html'
@@ -116,8 +117,7 @@ def main():
     links = root.xpath('//a/text()')
     endpoints = [ep for ep in links if _is_api_definition(ep)]
 
-    print('ENDPOINTS = ', end='')
-    pprint(create_tree(endpoints), compact=True)
+    print(yaml.dump(create_tree(endpoints)))
 
 
 if __name__ == '__main__':

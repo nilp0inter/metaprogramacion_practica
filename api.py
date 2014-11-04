@@ -3,15 +3,20 @@
 APIs de Trello.
 
 """
-import requests
-import inspect
 from functools import partial
-from endpoints import ENDPOINTS
+import inspect
+import os
+
+import requests
+import yaml
 
 __all__ = []
 
 TRELLO_URL = 'https://trello.com/'
+HERE = os.path.dirname(__file__)
 
+with open(os.path.join(HERE, 'endpoints.yaml'), 'rb') as ep_file:
+    ENDPOINTS = yaml.load(ep_file.read())
 
 class TrelloAPI:
     """
