@@ -1,13 +1,28 @@
+#!/usr/bin/env python
+"""
+APIs de Trello.
+
+"""
 import requests
+import inspect
 from functools import partial
 from endpoints import ENDPOINTS
+
+__all__ = []
 
 TRELLO_URL = 'https://trello.com/'
 
 
-__all__ = ['TrelloAPIV1']
-
 class TrelloAPI:
+    """
+    Clase encargada de hacer de interfaz con la API de Trello.
+
+    Genera métodos dinámicamente que se corresponden con las distintas
+    ramas de las URLs.
+
+    Define el método __call__ para poder pasar parámetros en la URL.
+
+    """
     def __init__(self, endpoints, name, apikey, parent=None):
         self._ep = endpoints
         self._arg = None
@@ -47,6 +62,10 @@ class TrelloAPI:
             return mypart
 
     def _api_call(self, method, *args, **kwargs):
+        """
+        Hace la petición HTTP al endpoint deseado.
+
+        """
         if 'params' in kwargs:
             kwargs['params']['key'] = self._apikey
         else:
@@ -62,8 +81,28 @@ class TrelloAPI:
         return TrelloAPI(self._ep, None, self._apikey, self)
 
 
-TrelloAPIV1 = partial(TrelloAPI, ENDPOINTS['TrelloV1'], '1')
+def generate_api(version):
+    """
+    Genera una función que instanciará la API de la versión indicada.
 
-if __name__ == '__main__':
-    TrelloV1 = TrelloAPI(ENDPOINTS['TrelloV1'], '1', 'INSERT KEY HERE')
+    """
+    def get_partial_api(key):
+        return TrelloAPI(ENDPOINTS[version], version, key)
 
+    get_partial_api.__doc__ = \
+        """Interfaz REST con Trello. Versión {}""".format(version)
+
+    return get_partial_api
+
+#
+# Generamos y registramos una clase TrelloAPI por cada versión
+#
+for version in ENDPOINTS.keys():
+    api_cls = generate_api(version)
+    api_name = 'TrelloAPIV{}'.format(version)
+
+    # Registramos la clase en el módulo 
+    globals()[api_name] = api_cls
+
+    # Permitimos que se importe la clase con `import *`
+    __all__.append(api_name)

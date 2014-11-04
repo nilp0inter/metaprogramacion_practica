@@ -63,7 +63,7 @@ def create_tree(endpoints):
     """
     Crea el árbol de endpoints de Trello.
 
-    >>> r = {'TrelloV1': { \
+    >>> r = {'1': { \
                  'actions': {'METHODS': {'GET'}}, \
                  'boards': { \
                      'members': {'METHODS': {'DELETE'}}}} \
@@ -84,9 +84,9 @@ def create_tree(endpoints):
         here = tree
 
         # Primer elemento (Versión de la API).
-        cls_name = 'TrelloV' + path[0]
-        here.setdefault(cls_name, {})
-        here = here[cls_name]
+        version = path[0]
+        here.setdefault(version, {})
+        here = here[version]
 
         # Resto de elementos de la URL.
         for p in path[1:]:
@@ -96,9 +96,10 @@ def create_tree(endpoints):
 
         # Métodos HTTP admitidos.
         if not 'METHODS' in here:
-            here['METHODS'] = {verb}
+            here['METHODS'] = [verb]
         else:
-            here['METHODS'].add(verb)
+            if not verb in here['METHODS']:
+                here['METHODS'].append(verb)
 
     return tree
 
