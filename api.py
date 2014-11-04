@@ -1,8 +1,11 @@
 import requests
 from functools import partial
+from endpoints import ENDPOINTS
 
 TRELLO_URL = 'https://trello.com/'
 
+
+__all__ = ['TrelloAPIV1']
 
 class TrelloAPI:
     def __init__(self, endpoints, name, apikey, parent=None):
@@ -22,13 +25,24 @@ class TrelloAPI:
 
     @property
     def _url(self):
-        mypart = self._name
+        """
+        Resuelve la URL hasta este punto.
 
-        if self._arg:
-            mypart += '/' + self._arg
+        >>> trello = TrelloAPIV1('APIKEY')
+        >>> trello.batch._url
+        '1/batch'
+        >>> trello.boards('BOARD_ID')._url
+        '1/boards/BOARD_ID'
+        >>> trello.boards('BOARD_ID')('FIELD')._url
+        '1/boards/BOARD_ID/FIELD'
+        >>> trello.boards('BOARD_ID').cards('FILTER')._url
+        '1/boards/BOARD_ID/cards/FILTER'
+
+        """
+        mypart = '/'.join(filter(None, [self._name, self._arg]))
 
         if self._parent:
-            return self._parent._url + '/' + mypart
+            return '/'.join(filter(None, [self._parent._url, mypart]))
         else:
             return mypart
 
@@ -37,14 +51,19 @@ class TrelloAPI:
             kwargs['params']['key'] = self._apikey
         else:
             kwargs['params'] = {'key': self._apikey}
+
         method = getattr(requests, method)
+
         return method(TRELLO_URL + self._url, *args, **kwargs)
 
     def __call__(self, arg):
         self._arg = str(arg)
-        return self
 
+        return TrelloAPI(self._ep, None, self._apikey, self)
+
+
+TrelloAPIV1 = partial(TrelloAPI, ENDPOINTS['TrelloV1'], '1')
 
 if __name__ == '__main__':
-    from endpoints import ENDPOINTS
     TrelloV1 = TrelloAPI(ENDPOINTS['TrelloV1'], '1', 'INSERT KEY HERE')
+
